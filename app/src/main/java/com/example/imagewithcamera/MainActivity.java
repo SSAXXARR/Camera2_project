@@ -3,6 +3,7 @@ package com.example.imagewithcamera;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -20,10 +21,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.Display;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
@@ -32,6 +38,7 @@ import java.util.stream.Stream;
 
 
 public class MainActivity extends AppCompatActivity {
+    Button button;
     public TextureView textureView;
     //check state orientation of output image
     /*private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
@@ -42,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }*/
     //для проверки задняя или передняя камера у нас вкл.
-    private String cameraId;
+    private String cameraId = "0";
     //объект работающий с нашим девайсом.
     private CameraDevice cameraDevice;
     //Настроенный сеанс захвата для CameraDevice
@@ -56,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
 
     HandlerThread mBackgroundThread;
 
+    /*WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+    Display display = wm.getDefaultDisplay();*/
+
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,8 +74,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textureView = findViewById(R.id.textureView);
+        button = findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    flipCamera();
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
-    //проверяет разрешение.
+
+    private void flipCamera() throws CameraAccessException {
+        if(cameraDevice != null && cameraId.equals("0")){
+            closeCamera();
+            cameraId = "1";
+            openCamera(cameraId);
+        }
+        else if(cameraDevice != null && cameraId.equals("1")){
+            closeCamera();
+            cameraId = "0";
+            openCamera(cameraId);
+        }
+    }
+
+    //проверяет разрешение./////////////////////////////////
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == 101){
@@ -79,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
             try {
-                openCamera();
+                openCamera(cameraId);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -124,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
             cameraDevice = null;
         }
     };
+
     //создаем предварительный просмотр камеры, ширина, высота устройства и что поменялось
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
@@ -148,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-
             @Override
             public void onConfigureFailed(CameraCaptureSession cameraCaptureSession) {
                 Toast.makeText(getApplicationContext(), "Configuration change", Toast.LENGTH_LONG).show();
@@ -165,32 +201,40 @@ public class MainActivity extends AppCompatActivity {
         cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHundler);
     }
 
-
-    private void openCamera() throws CameraAccessException {
-        //получаем доступ к камере через CameraManager.
-        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        //берем определенную камеру (задняя 0, передняя 1)
-        cameraId = manager.getCameraIdList()[1];
-        //проверяем характеристики нашей камеры.
-        CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
-        //Конфигурации потока с несколькими разрешениями,
-        // поддерживаемые этой логической камерой или устройством с датчиком сверхвысокого разрешения.
-        StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-        imageDimension = map.getOutputSizes(SurfaceTexture.class)[1];
-        //проверяем есть ли у нас доступ к камере
-        //На вход метод требует Context и название разрешения.
-        // Он вернет константу PackageManager.PERMISSION_GRANTED (если разрешение есть)
-        // или PackageManager.PERMISSION_DENIED (если разрешения нет).
+//////
+    private void openCamera(String idCamera) throws CameraAccessException {
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
             //PackageManager.PERMISSION_GRANTED == разрешение есть.
             //запрашиваем разрешение, если его нет с помощью requestPermissions
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 101);
             return;
         }
+        //получаем доступ к камере через CameraManager.
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        //берем определенную камеру (задняя 0, передняя 1)
+        /*cameraId = manager.getCameraIdList()[0];*/
+        //проверяем характеристики нашей камеры.
+        CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
+        //Конфигурации потока с несколькими разрешениями,
+        // поддерживаемые этой логической камерой или устройством с датчиком сверхвысокого разрешения.
+        StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+        imageDimension = map.getOutputSizes(SurfaceTexture.class)[Integer.parseInt(cameraId)];
+        //проверяем есть ли у нас доступ к камере
+        //На вход метод требует Context и название разрешения.
+        // Он вернет константу PackageManager.PERMISSION_GRANTED (если разрешение есть)
+        // или PackageManager.PERMISSION_DENIED (если разрешения нет).
+
 
         manager.openCamera(cameraId, stateCallBack, null);
+    }
 
+
+    public void closeCamera() {
+        if (cameraDevice != null) {
+            cameraDevice.close();
+            cameraDevice = null;
+        }
     }
 
     @Override
@@ -199,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
         startBackgroundThread();
         if(textureView.isAvailable()){
             try {
-                openCamera();
+                openCamera(cameraId);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }

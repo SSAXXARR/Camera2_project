@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ImageWithCamera</string>
+    <string name="button_txt">flip</string>
 </resources>
