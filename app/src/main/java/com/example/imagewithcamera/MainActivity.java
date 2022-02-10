@@ -41,13 +41,13 @@ public class MainActivity extends AppCompatActivity {
     Button button;
     public TextureView textureView;
     //check state orientation of output image
-    /*private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 90);
         ORIENTATIONS.append(Surface.ROTATION_90, 0);
         ORIENTATIONS.append(Surface.ROTATION_180, 270);
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }*/
+    }
     //для проверки задняя или передняя камера у нас вкл.
     private String cameraId = "0";
     //объект работающий с нашим девайсом.
@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
         textureView = findViewById(R.id.textureView);
@@ -100,12 +101,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //проверяет разрешение./////////////////////////////////
+    //проверяет разрешение.
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == 101){
-            if(grantResults[1] == PackageManager.PERMISSION_DENIED){
+            if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
                 Toast.makeText(getApplicationContext(), "Sorry, camera permission is necessary", Toast.LENGTH_SHORT).show();
+                finish();
             }
         }
     }
@@ -164,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
     //создаем предварительный просмотр камеры, ширина, высота устройства и что поменялось
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
-        texture.setDefaultBufferSize(imageDimension.getWidth(),imageDimension.getHeight());
+        texture.setDefaultBufferSize(1600,900);
         Surface surface = new Surface(texture);
         try {
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
