@@ -30,6 +30,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import java.io.File;
@@ -38,7 +39,7 @@ import java.util.stream.Stream;
 
 
 public class MainActivity extends AppCompatActivity {
-    Button button;
+    ImageButton button;
     public TextureView textureView;
     //check state orientation of output image
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
     //создаем предварительный просмотр камеры, ширина, высота устройства и что поменялось
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
-        texture.setDefaultBufferSize(1400,900);
+        texture.setDefaultBufferSize(900,1400);
         Surface surface = new Surface(texture);
         try {
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

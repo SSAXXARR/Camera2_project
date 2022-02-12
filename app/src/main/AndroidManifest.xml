@@ -18,6 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:label="Camera2"
             android:screenOrientation="portrait">
 
             <intent-filter>
