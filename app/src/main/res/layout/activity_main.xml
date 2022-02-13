@@ -8,16 +8,17 @@
     android:background="@color/black">
 
 
-        <TextureView
-            android:id="@+id/textureView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="100dp"
-            android:scaleType="centerInside"
-            app:layout_constraintDimensionRatio="1:1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <TextureView
+        android:id="@+id/textureView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:scaleType = "centerInside"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <!--app:layout_constraintDimensionRatio="1:1"
+    android:scaleType = "centerInside"-->
 
     <ImageButton
         android:id="@+id/button"
@@ -29,7 +30,8 @@
         app:layout_constraintBottom_toBottomOf="@id/textureView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.947"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="SpeakableTextPresentCheck" />
 
 
 </android.support.constraint.ConstraintLayout>
