@@ -2,10 +2,12 @@ package com.example.imagewithcamera;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Point;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -14,7 +16,6 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,20 +27,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.Display;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -62,12 +60,16 @@ public class MainActivity extends AppCompatActivity {
     //Неизменяемый пакет настроек и выходов, необходимых для захвата одного изображения с устройства камеры
     private CaptureRequest.Builder captureRequestBuilder;
     //размер экрана
-    //private Size imageDimension;
-    private Size[] imageDimension;
+    //private Size[] imageDimension;
+    private Size imageDimension;
     // позволяет отправлять и обрабатывать Message и выполняемые объекты, связанные с потоком
     Handler mBackgroundHundler;
 
     HandlerThread mBackgroundThread;
+    int imageWidth;
+    int imageHeight;
+    private int orgPreviewWidth;
+    private int orgPreviewHeight;
 
     /*WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
     Display display = wm.getDefaultDisplay();*/
@@ -170,16 +172,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
     //создаем предварительный просмотр камеры, ширина, высота устройства и что поменялось
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
-        //texture.setDefaultBufferSize(1088,1088);
-        //Log.d("myLog", imageDimension.getHeight() + " /// " + imageDimension.getWidth());
-
-        //соотношение сторон, здесь 3:4
-        float cameraAspectRatio = (float) 3/4;
-
         //Preparation
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -187,27 +182,16 @@ public class MainActivity extends AppCompatActivity {
         int screenHeight = metrics.heightPixels / 2;
         int finalWidth = screenWidth;
         int finalHeight = screenHeight;
-        int widthDifference = 0;
-        int heightDifference = 0;
-        float screenAspectRatio = (float) screenWidth / screenHeight;
-
-        //Determines whether we crop width or crop height
-        if (screenAspectRatio > cameraAspectRatio) { //Keep width crop height
-            finalHeight = (int) (screenWidth / cameraAspectRatio);
-            heightDifference = finalHeight - screenHeight;
-        } else { //Keep height crop width
-            finalWidth = (int) (screenHeight * cameraAspectRatio);
-            widthDifference = finalWidth - screenWidth;
-        }
-
         //Apply the result to the Preview
         ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) textureView.getLayoutParams();
         lp.width = finalWidth;
         lp.height = finalHeight;
+        texture.setDefaultBufferSize(screenWidth, screenHeight);
         //Below 2 lines are to center the preview, since cropping default occurs at the right and bottom
-        lp.leftMargin = - (widthDifference / 2);
-        lp.topMargin = - (10000);
         textureView.setLayoutParams(lp);
+
+        CalculateTransform calculateTransform = new CalculateTransform();
+        textureView.setTransform(calculateTransform.calculateTransform(lp.width , lp.height, imageDimension));
 
 
         Surface surface = new Surface(texture);
@@ -246,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
         cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHundler);
     }
 
-//////
+
     private void openCamera(String idCamera) throws CameraAccessException {
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
             //PackageManager.PERMISSION_GRANTED == разрешение есть.
@@ -261,18 +245,9 @@ public class MainActivity extends AppCompatActivity {
         //Конфигурации потока с несколькими разрешениями,
         // поддерживаемые этой логической камерой или устройством с датчиком сверхвысокого разрешения.
         StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
-        imageDimension = map.getOutputSizes(SurfaceTexture.class);//[Integer.parseInt(cameraId)]
-
-        Size[] sizes = map.getOutputSizes(SurfaceTexture.class);
-        for (int i = 0; i < sizes.length; i++) {
-            Log.d("myLog", " " + sizes[i]);
-        }
-        //проверяем есть ли у нас доступ к камере
-        //На вход метод требует Context и название разрешения.
-        // Он вернет константу PackageManager.PERMISSION_GRANTED (если разрешение есть)
-        // или PackageManager.PERMISSION_DENIED (если разрешения нет).
-
+        //получаем размер с камеры какой идет на вывод
+        imageDimension = map.getOutputSizes(SurfaceTexture.class)[Integer.parseInt(cameraId)];
+        Log.d("myLog1", " " + imageDimension);
 
         manager.openCamera(cameraId, stateCallBack, null);
     }
