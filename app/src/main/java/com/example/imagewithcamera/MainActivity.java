@@ -3,9 +3,6 @@ package com.example.imagewithcamera;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -27,14 +24,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
-import android.view.Display;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.Arrays;
@@ -62,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     //размер экрана
     //private Size[] imageDimension;
     private Size imageDimension;
+    public Size[] imageDimension2;
     // позволяет отправлять и обрабатывать Message и выполняемые объекты, связанные с потоком
     Handler mBackgroundHundler;
 
@@ -96,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
+    public Size[] getSize() {
+        return imageDimension2;
+    }
     private void flipCamera() throws CameraAccessException {
         if(cameraDevice != null && cameraId.equals("0")){
             closeCamera();
@@ -175,23 +172,44 @@ public class MainActivity extends AppCompatActivity {
     //создаем предварительный просмотр камеры, ширина, высота устройства и что поменялось
     private void createCameraPreview() throws CameraAccessException {
         SurfaceTexture texture = textureView.getSurfaceTexture();
-        //Preparation
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels / 2;
+        Size sizeFinish = getOptimalSize(imageDimension2, screenWidth, screenHeight);
+        int cameraSizeW = sizeFinish.getWidth();
+        int cameraSizeH = sizeFinish.getHeight();
+        texture.setDefaultBufferSize(cameraSizeW,cameraSizeW);
+
+        //соотношение сторон, здесь 3:4
+        /*float cameraAspectRatio = (float) 16/9;
+
+        //Preparation
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
         int finalWidth = screenWidth;
         int finalHeight = screenHeight;
-        //Apply the result to the Preview
         ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) textureView.getLayoutParams();
         lp.width = finalWidth;
-        lp.height = finalHeight;
-        texture.setDefaultBufferSize(screenWidth, screenHeight);
-        //Below 2 lines are to center the preview, since cropping default occurs at the right and bottom
-        textureView.setLayoutParams(lp);
+        lp.height = finalWidth;
+        textureView.setLayoutParams(lp);*/
 
-        CalculateTransform calculateTransform = new CalculateTransform();
-        textureView.setTransform(calculateTransform.calculateTransform(lp.width , lp.height, imageDimension));
+        //textureView.setAspectRatio(finalWidth, finalHeight);
+        //Apply the result to the Preview
+
+        //Below 2 lines are to center the preview, since cropping default occurs at the right and bottom
+       /* lp.leftMargin = - (widthDifference / 2);
+        lp.topMargin = - (10000);*/
+        /*textureView.setLayoutParams(lp);*/
+        /*MyTextureView autoFitTextureView = new MyTextureView(this, null);
+        autoFitTextureView.setAspectRatio(imageDimension.getWidth(),  imageDimension.getHeight());*/
+        /*if()textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
+    } else {
+        textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());*/
+        /*CalculateTransform calculateTransform = new CalculateTransform();
+        textureView.setTransform(calculateTransform.calculateTransform(lp.width , lp.height, imageDimension));*/
 
 
         Surface surface = new Surface(texture);
@@ -221,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
         }, null);
     }
 
+
     private void updatePreview() throws CameraAccessException {
         if(cameraDevice == null){
             return;
@@ -228,6 +247,39 @@ public class MainActivity extends AppCompatActivity {
         captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_MODE_AUTO);
 
         cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHundler);
+    }
+
+    public Size getOptimalSize(Size[] sizes, int w, int h){
+        final double ASPECT_TOLERANCE = 0.1;
+        double targetRatio=(double) h / w;
+
+        if (sizes == null) return null;
+        Size optimalSize = null;
+
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = h;
+
+        for (Size size : sizes) {
+            double ratio = (double) size.getWidth() / size.getHeight();
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+            if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.getHeight() - targetHeight);
+            }
+        }
+
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (Size size : sizes) {
+                if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.getHeight() - targetHeight);
+                }
+            }
+        }
+        Log.d("MyLoggges", " " + optimalSize);
+        return optimalSize;
     }
 
 
@@ -247,10 +299,22 @@ public class MainActivity extends AppCompatActivity {
         StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         //получаем размер с камеры какой идет на вывод
         imageDimension = map.getOutputSizes(SurfaceTexture.class)[Integer.parseInt(cameraId)];
+        imageDimension2 = map.getOutputSizes(SurfaceTexture.class);
         Log.d("myLog1", " " + imageDimension);
 
         manager.openCamera(cameraId, stateCallBack, null);
     }
+    /*public Size bestSize(Size[] size){
+        for (int i = 0; i < size.length; i++) {
+            int l = size[i].getWidth();
+            Log.d("myLog1", " " + size[i]);
+            if(l == 1920){
+                Size s = size[i];
+                return s;
+            }
+        }
+        return null;
+    }*/
 
 
     public void closeCamera() {

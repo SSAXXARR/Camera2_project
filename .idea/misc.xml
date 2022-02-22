@@ -5,10 +5,12 @@
       <map>
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/drawable/camera_flip_outline.xml" value="0.1935" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/drawable/camera_iris.xml" value="0.1935" />
+        <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/drawable/capture_button.xml" value="0.1935" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/activity_main.xml" value="0.176" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/layout2.xml" value="0.264" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/layoutprob.xml" value="0.16052631578947368" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/layouttt.xml" value="0.16052631578947368" />
+        <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/main_activity2.xml" value="0.20863616930312098" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/prob.xml" value="0.20863616930312098" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/probl.xml" value="0.16052631578947368" />
         <entry key="..\:/Android/AndroidCourse/ImageWithCamera/app/src/main/res/layout/prodd.xml" value="0.20863616930312098" />
