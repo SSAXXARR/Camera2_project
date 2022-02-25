@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -18,15 +17,12 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -37,14 +33,7 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity {
     ImageButton button;
     public TextureView textureView;
-    //check state orientation of output image
-    /*private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
-    static {
-        ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }*/
+
     //для проверки задняя или передняя камера у нас вкл.
     private String cameraId = "0";
     //объект работающий с нашим девайсом.
@@ -54,20 +43,10 @@ public class MainActivity extends AppCompatActivity {
     //Неизменяемый пакет настроек и выходов, необходимых для захвата одного изображения с устройства камеры
     private CaptureRequest.Builder captureRequestBuilder;
     //размер экрана
-    //private Size[] imageDimension;
-    private Size imageDimension;
-    public Size[] imageDimension2;
+    public Size[] imageDimension;
     // позволяет отправлять и обрабатывать Message и выполняемые объекты, связанные с потоком
     Handler mBackgroundHundler;
-
     HandlerThread mBackgroundThread;
-    int imageWidth;
-    int imageHeight;
-    private int orgPreviewWidth;
-    private int orgPreviewHeight;
-
-    /*WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-    Display display = wm.getDefaultDisplay();*/
 
 
 
@@ -79,21 +58,15 @@ public class MainActivity extends AppCompatActivity {
 
         textureView = findViewById(R.id.textureView);
         button = findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    flipCamera();
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
+        button.setOnClickListener(view -> {
+            try {
+                flipCamera();
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
             }
         });
     }
-
-    public Size[] getSize() {
-        return imageDimension2;
-    }
+    //метод, который меняет камеры
     private void flipCamera() throws CameraAccessException {
         if(cameraDevice != null && cameraId.equals("0")){
             closeCamera();
@@ -107,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //проверяет разрешение.
+    //проверяет разрешение на использование камеры.
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == 101){
@@ -118,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //срабатывает, когда наш textureView становится доступен.
+    //срабатывает, когда наш textureView становится доступен и открывает камеру
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
@@ -175,43 +148,11 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels / 2;
-        Size sizeFinish = getOptimalSize(imageDimension2, screenWidth, screenHeight);
+        int screenHeight = metrics.heightPixels/2;
+        Size sizeFinish = getOptimalSize(imageDimension, screenWidth, screenHeight);
         int cameraSizeW = sizeFinish.getWidth();
         int cameraSizeH = sizeFinish.getHeight();
-        texture.setDefaultBufferSize(cameraSizeW,cameraSizeW);
-
-        //соотношение сторон, здесь 3:4
-        /*float cameraAspectRatio = (float) 16/9;
-
-        //Preparation
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-        int finalWidth = screenWidth;
-        int finalHeight = screenHeight;
-        ConstraintLayout.LayoutParams lp = (ConstraintLayout.LayoutParams) textureView.getLayoutParams();
-        lp.width = finalWidth;
-        lp.height = finalWidth;
-        textureView.setLayoutParams(lp);*/
-
-        //textureView.setAspectRatio(finalWidth, finalHeight);
-        //Apply the result to the Preview
-
-        //Below 2 lines are to center the preview, since cropping default occurs at the right and bottom
-       /* lp.leftMargin = - (widthDifference / 2);
-        lp.topMargin = - (10000);*/
-        /*textureView.setLayoutParams(lp);*/
-        /*MyTextureView autoFitTextureView = new MyTextureView(this, null);
-        autoFitTextureView.setAspectRatio(imageDimension.getWidth(),  imageDimension.getHeight());*/
-        /*if()textureView.setAspectRatio(previewSize.getWidth(), previewSize.getHeight());
-    } else {
-        textureView.setAspectRatio(previewSize.getHeight(), previewSize.getWidth());*/
-        /*CalculateTransform calculateTransform = new CalculateTransform();
-        textureView.setTransform(calculateTransform.calculateTransform(lp.width , lp.height, imageDimension));*/
-
-
+        texture.setDefaultBufferSize(cameraSizeW,cameraSizeH);
         Surface surface = new Surface(texture);
         try {
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -239,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         }, null);
     }
 
-
+    //обновление
     private void updatePreview() throws CameraAccessException {
         if(cameraDevice == null){
             return;
@@ -248,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
         cameraCaptureSessions.setRepeatingRequest(captureRequestBuilder.build(), null, mBackgroundHundler);
     }
-
+    //ищет самый лучший размер камеры для размера превью (в нашем случает 50% экрана)
     public Size getOptimalSize(Size[] sizes, int w, int h){
         final double ASPECT_TOLERANCE = 0.1;
         double targetRatio=(double) h / w;
@@ -278,11 +219,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        Log.d("MyLoggges", " " + optimalSize);
         return optimalSize;
     }
 
-
+    //метод, который открывает камеру
     private void openCamera(String idCamera) throws CameraAccessException {
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
             //PackageManager.PERMISSION_GRANTED == разрешение есть.
@@ -298,23 +238,9 @@ public class MainActivity extends AppCompatActivity {
         // поддерживаемые этой логической камерой или устройством с датчиком сверхвысокого разрешения.
         StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         //получаем размер с камеры какой идет на вывод
-        imageDimension = map.getOutputSizes(SurfaceTexture.class)[Integer.parseInt(cameraId)];
-        imageDimension2 = map.getOutputSizes(SurfaceTexture.class);
-        Log.d("myLog1", " " + imageDimension);
-
+        imageDimension = map.getOutputSizes(SurfaceTexture.class);
         manager.openCamera(cameraId, stateCallBack, null);
     }
-    /*public Size bestSize(Size[] size){
-        for (int i = 0; i < size.length; i++) {
-            int l = size[i].getWidth();
-            Log.d("myLog1", " " + size[i]);
-            if(l == 1920){
-                Size s = size[i];
-                return s;
-            }
-        }
-        return null;
-    }*/
 
 
     public void closeCamera() {
