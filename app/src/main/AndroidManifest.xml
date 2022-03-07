@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.imagewithcamera">
+    package="com.example.imagewithcamera"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--Добавление прав на камеру-->
     <uses-permission android:name="android.permission.CAMERA"/>
     <!--для записи картинки в файл-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!--для получения доступа к микрофону-->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-permission android:name="android.hardware.camera2.full"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
+        tools:replace="android:label"
         android:label="Camera2"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity
-            android:name=".MainActivity"
+            android:name=".MRecorder"
             android:exported="true"
             android:screenOrientation="portrait">
 

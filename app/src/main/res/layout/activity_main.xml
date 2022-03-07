@@ -32,5 +32,18 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
 
+    <com.gauravk.audiovisualizer.visualizer.BlastVisualizer
+        android:id="@+id/blast"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:avColor="@color/av_dark_blue"
+        app:avDensity="0.8"
+        app:avSpeed="normal"
+        app:avType="fill"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textureView" />
+
 
 </android.support.constraint.ConstraintLayout>

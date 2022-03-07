@@ -12,6 +12,9 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -33,7 +36,7 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity {
     ImageButton button;
     public TextureView textureView;
-
+    private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 202;
     //для проверки задняя или передняя камера у нас вкл.
     private String cameraId = "0";
     //объект работающий с нашим девайсом.
@@ -47,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     // позволяет отправлять и обрабатывать Message и выполняемые объекты, связанные с потоком
     Handler mBackgroundHundler;
     HandlerThread mBackgroundThread;
+    protected MediaRecorder recorder;
+    com.gauravk.audiovisualizer.visualizer.BlastVisualizer mVisualizer;
 
 
 
@@ -55,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-
         textureView = findViewById(R.id.textureView);
         button = findViewById(R.id.button);
+
         button.setOnClickListener(view -> {
             try {
                 flipCamera();
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     //метод, который меняет камеры
     private void flipCamera() throws CameraAccessException {
         if(cameraDevice != null && cameraId.equals("0")){
@@ -81,13 +87,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //проверяет разрешение на использование камеры.
+    //проверяет разрешение на использование камеры.
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == 101){
-            if(grantResults[0] != PackageManager.PERMISSION_GRANTED){
+        if (requestCode == 101) {
+            //для камеры
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(getApplicationContext(), "Sorry, camera permission is necessary", Toast.LENGTH_SHORT).show();
                 finish();
             }
+            //для микрофона
+            else if(grantResults[1] != PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(getApplicationContext(), "Sorry, camera permission is necessary", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+
+    }
+    private void requestPerms() {
+        String[] permission = new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, permission, 101);
         }
     }
 
@@ -224,10 +246,9 @@ public class MainActivity extends AppCompatActivity {
 
     //метод, который открывает камеру
     private void openCamera(String idCamera) throws CameraAccessException {
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
-            //PackageManager.PERMISSION_GRANTED == разрешение есть.
-            //запрашиваем разрешение, если его нет с помощью requestPermissions
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 101);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            //метод, который проверяет все разрешения разом.
+            requestPerms();
             return;
         }
         //получаем доступ к камере через CameraManager.
