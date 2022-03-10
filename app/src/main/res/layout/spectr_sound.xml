@@ -5,12 +5,11 @@
     android:layout_width ="match_parent"
     android:layout_height ="match_parent"
     android:id ="@+id/chart_layout"
-    tools:context =".MRecorder"
+    tools:context ="."
     android:orientation ="vertical"
     tools:ignore="MissingClass">
     <com.chibde.visualizer.LineBarVisualizer
         android:id="@+id/visualizer"
         android:layout_width="match_parent"
-        android:layout_height="400dp"/>
-
+        android:layout_height="250dp"/>
 </RelativeLayout >
