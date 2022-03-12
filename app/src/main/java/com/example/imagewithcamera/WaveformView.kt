@@ -6,7 +6,10 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.DisplayMetrics
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import kotlin.math.max
 
 class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attrs) {
@@ -21,23 +24,22 @@ class WaveformView(context: Context?, attrs: AttributeSet?) : View(context, attr
     private var maxSpikes = 0
     init {
         paint.color = (Color.rgb(244, 81,30))
-        sw = resources.displayMetrics.widthPixels.toFloat()
-        maxSpikes = (sh / (w + d)).toInt()
+        sw = (resources.displayMetrics.widthPixels).toFloat()
+        maxSpikes = (sw / (w + d)).toInt()
     }
     fun addAmplitude(amp: Float){
         var norm = Math.min(amp.toInt()/7, 400).toFloat()
         amplitudes.add(norm)
+
         spikes.clear()
         var amps = amplitudes.takeLast(maxSpikes) // arrayList
         for(i in amps.indices){
             var left = sw - i * (w + d)
-            var top = sh/2 - amps[i]/2
+            var top = sh / 2 - amps[i] / 2
             var right = left + w
             var bottom = top + amps[i]
             spikes.add(RectF(left, top, right, bottom))
         }
-
-
         invalidate()
     }
 

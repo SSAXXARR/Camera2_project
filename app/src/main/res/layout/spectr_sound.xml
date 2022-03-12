@@ -1,15 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout  xmlns:android ="http://schemas.android.com/apk/res/android"
-    xmlns:aw="http://schemas.android.com/apk/res-auto"
-    xmlns:tools ="http://schemas.android.com/tools"
-    android:layout_width ="match_parent"
-    android:layout_height ="match_parent"
-    android:id ="@+id/chart_layout"
-    tools:context ="."
-    android:orientation ="vertical"
-    tools:ignore="MissingClass">
-    <com.chibde.visualizer.LineBarVisualizer
-        android:id="@+id/visualizer"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <TextView
+        android:id="@+id/tvTimer"
         android:layout_width="match_parent"
-        android:layout_height="250dp"/>
-</RelativeLayout >
+        android:layout_height="wrap_content"
+        android:text="00:00:00"
+        android:textColor="@color/purple_200"
+        android:textSize="56sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.example.imagewithcamera.WaveformView
+        android:id="@+id/waveformView"
+        android:layout_width="match_parent"
+        android:layout_height="400px"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <Button
+            android:id="@+id/btnDelete"
+            android:background="@color/purple_200"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_margin="20dp"/>
+        <Button
+            android:id="@+id/btnRecord"
+            android:background="@color/purple_200"
+            android:layout_width="56dp"
+            android:layout_height="56dp"/>
+        <Button
+            android:id="@+id/btnList"
+            android:background="@color/purple_200"
+            android:layout_margin="20dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"/>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
