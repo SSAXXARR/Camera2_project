@@ -35,9 +35,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chibde.visualizer.LineBarVisualizer;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Timer.OnTimerTickListener{
     ImageButton button;
     public TextureView textureView;
     private ArrayList<String> permissionsArrayList = new ArrayList<String>();
@@ -64,11 +67,18 @@ public class MainActivity extends AppCompatActivity {
     // позволяет отправлять и обрабатывать Message и выполняемые объекты, связанные с потоком
     Handler mBackgroundHundler;
     HandlerThread mBackgroundThread;
-    //Volume
-    MediaRecorder mediaRecorder;
+
+    //Spectrum
     WaveformView waveform;
     String dirPath = "";
     String fileName = "";
+    private MediaRecorder recorder;
+    private boolean isRecording = false;
+    private boolean isPaused = false;
+    Timer timer;
+    String file;
+    TextView tvTimer;
+
 
 
     @Override
@@ -78,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textureView = findViewById(R.id.textureView);
         button = findViewById(R.id.button);
+        tvTimer = findViewById(R.id.tvTimer);
+        //таймер нужен для корректной работы отображения спектра.
+        timer = new Timer(this);
+        //startRecording();
 
         waveform = findViewById(R.id.waveformView);
 
@@ -90,29 +104,57 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+    //запуск микрофона и записи в файл, так же запуск таймера
     public void startRecording() {
         requestPerms();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED) {
+                recorder = new MediaRecorder();
 
-            try {
-                mediaRecorder = new MediaRecorder();
-                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-                mediaRecorder.setOutputFile(getRecordingFilePath());
-                mediaRecorder.prepare();
-                mediaRecorder.start();
-                waveform.addAmplitude(mediaRecorder.getMaxAmplitude());
-                Toast.makeText(this, "Recording is started", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+                recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                file = getRecordingFilePath();
+                recorder.setOutputFile(file);
 
-        } else {
-        Toast.makeText(this, "Sorry, your MIC don't work", Toast.LENGTH_SHORT).show();
+                try {
+                    recorder.prepare();
+                }catch (IOException e) {
+                    e.printStackTrace();
+                }
+                recorder.start();
+                timer.start();
         }
+        isRecording = true;
+        isPaused = false;
+
+    }
+    private void stopRecorder(){
+        timer.stop();
+
+    }
+    //имплементированный метор таймера.
+    // через него мы подбираем размер отображаемой амплитуды спектра.
+    @Override
+    public void onTimerTick(@NotNull String duration) {
+        waveform.addAmplitude(recorder.getMaxAmplitude());
+    }
+    void pauseRecorder() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            recorder.pause();
+        }
+        isPaused= true;
+        timer.pause();
+    }
+    void resumeRecorder() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            recorder.resume();
+        }
+        isPaused= false;
+        timer.start();
     }
     //метод который записывает в файл нашу запись
+    //и делает уникальное имя из даты и времени
     private String getRecordingFilePath(){
         ContextWrapper contextWrapper = new ContextWrapper(getApplicationContext());
         File musicDirectory = contextWrapper.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
@@ -337,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
         else{
             textureView.setSurfaceTextureListener(textureListener);
         }
+        //запуск таймера.
         startRecording();
 
     }
@@ -348,11 +391,14 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        mediaRecorder.stop();
-        mediaRecorder.release();
-        mediaRecorder = null;
-        Toast.makeText(this, "Recording is stop", Toast.LENGTH_SHORT).show();
+        pauseRecorder();
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopRecorder();
     }
 
     protected void stopBackgroundThread() throws InterruptedException {

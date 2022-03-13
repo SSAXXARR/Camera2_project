@@ -22,14 +22,14 @@ class Timer(listener: OnTimerTickListener) {
             listener.onTimerTick(format())
         }
     }
-     fun start(){
+    fun start(){
         handler.postDelayed(runnable, delay)
     }
 
-     fun pause(){
+    fun pause(){
         handler.removeCallbacks(runnable)
     }
-     fun stop(){
+    fun stop(){
         handler.removeCallbacks(runnable)
         duration = 0L
     }
